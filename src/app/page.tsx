@@ -260,10 +260,13 @@ function getHitFeedback(type: ObstacleType, effect: ReturnType<typeof collisionE
     return `蜗牛发光 心情-${effect.mood}`;
   }
   if (type === "scooter") {
-    return `电动车水花 湿+${effect.wet} 心-${effect.mood}`;
+    return `被电动车水花打到 湿+${effect.wet} 心-${effect.mood}`;
   }
   if (type === "car") {
-    return `汽车水花 湿+${effect.wet} 心-${effect.mood}`;
+    return `被汽车水花打到 湿+${effect.wet} 心-${effect.mood}`;
+  }
+  if (type === "flyingRoach") {
+    return `飞蟑撞伞 心-${effect.mood}`;
   }
   const wet = effect.wet > 0 ? `湿度+${effect.wet} ` : "";
   return `${wet}心情-${effect.mood}`;
@@ -274,21 +277,31 @@ function getDodgeFeedback(type: ObstacleType) {
     return "跳过 心情+1";
   }
   if (type === "flyingRoach") {
-    return "避开飞线 +1";
+    return "飞蟑擦身通过 无扣分";
   }
   if (type === "scooter") {
-    return "电动车躲过 无扣分";
+    return "电动车擦身通过 无扣分";
   }
   if (type === "car") {
-    return "汽车躲过 无扣分";
+    return "汽车擦身通过 无扣分";
   }
   return "擦身躲开 +1";
 }
 
 function getVehicleDodgeMessage(type: ObstacleType) {
   return type === "car"
-    ? "汽车躲过了：这次没有车辆扣分，雨水仍会慢慢累积。"
-    : "电动车躲过了：这次没有车辆扣分，雨水仍会慢慢累积。";
+    ? "汽车擦身通过：没有被水花打到。"
+    : "电动车擦身通过：没有被水花打到。";
+}
+
+function getDodgeMessage(type: ObstacleType) {
+  if (isVehicle(type)) {
+    return getVehicleDodgeMessage(type);
+  }
+  if (type === "flyingRoach") {
+    return "飞蟑擦身通过：没有撞伞，没有扣分。";
+  }
+  return getDodgeFeedback(type);
 }
 
 function createObstacle(type: ObstacleType, id: number): ObstacleSpec {
@@ -695,17 +708,19 @@ function StatBar({ label, value, tone }: { label: string; value: number; tone: "
 function ControlButton({
   label,
   glyph = label,
+  className = "",
   onDown,
   onUp,
 }: {
   label: string;
   glyph?: string;
+  className?: string;
   onDown: () => void;
   onUp: () => void;
 }) {
   return (
     <button
-      className="control-button"
+      className={`control-button ${className}`}
       type="button"
       aria-label={label}
       title={label}
@@ -984,6 +999,7 @@ export default function Home() {
             if (!obstacle.hit && !obstacle.outcome && isJumpClearingGroundObstacle(obstacle, player)) {
               obstacle.outcome = "dodged";
               player.mood = clamp(player.mood + 1, 0, 100);
+              message = getDodgeMessage(obstacle.type);
               feedbacks.push({
                 id: feedbackIdRef.current++,
                 x: obstacle.x + obstacle.w * 0.5,
@@ -1005,7 +1021,7 @@ export default function Home() {
             ) {
               obstacle.outcome = "dodged";
               player.mood = clamp(player.mood + 1, 0, 100);
-              message = getVehicleDodgeMessage(obstacle.type);
+              message = getDodgeMessage(obstacle.type);
               wetFeedbackTimerRef.current = 0;
               passiveWetRef.current = 0;
               passiveMoodRef.current = 0;
@@ -1046,6 +1062,7 @@ export default function Home() {
             if (!obstacle.hit && !obstacle.outcome && hasPassedPlayer(obstacle)) {
               obstacle.outcome = "dodged";
               player.mood = clamp(player.mood + 1, 0, 100);
+              message = getDodgeMessage(obstacle.type);
               feedbacks.push({
                 id: feedbackIdRef.current++,
                 x: obstacle.x + obstacle.w * 0.5,
@@ -1140,18 +1157,13 @@ export default function Home() {
               <Obstacle key={obstacle.id} obstacle={obstacle} />
             ))}
 
-            {snapshot.feedbacks.map((feedback) => (
-              <span
-                key={feedback.id}
-                className={`feedback-float feedback-${feedback.tone}`}
-                style={{
-                  left: `${feedback.x}%`,
-                  top: `${feedback.y}%`,
-                }}
-              >
-                {feedback.text}
-              </span>
-            ))}
+            <div className="feedback-stack" aria-live="polite">
+              {snapshot.feedbacks.slice(-2).map((feedback) => (
+                <span key={feedback.id} className={`feedback-toast feedback-${feedback.tone}`}>
+                  {feedback.text}
+                </span>
+              ))}
+            </div>
 
             <div
               className="player"
@@ -1242,15 +1254,13 @@ export default function Home() {
             )}
 
             <div className="touch-controls" aria-label="移动端操控">
-              <div className="control-cluster">
-                <ControlButton label="升伞" glyph="↑" onDown={() => setKey("up", true)} onUp={() => setKey("up", false)} />
-                <ControlButton label="降伞" glyph="↓" onDown={() => setKey("down", true)} onUp={() => setKey("down", false)} />
+              <div className="control-dpad" aria-label="左手方向盘">
+                <ControlButton className="dpad-up" label="升伞" glyph="↑" onDown={() => setKey("up", true)} onUp={() => setKey("up", false)} />
+                <ControlButton className="dpad-left" label="左斜" glyph="↙" onDown={() => setKey("left", true)} onUp={() => setKey("left", false)} />
+                <ControlButton className="dpad-right" label="右斜" glyph="↘" onDown={() => setKey("right", true)} onUp={() => setKey("right", false)} />
+                <ControlButton className="dpad-down" label="降伞" glyph="↓" onDown={() => setKey("down", true)} onUp={() => setKey("down", false)} />
               </div>
-              <ControlButton label="跳" glyph="跳" onDown={() => setKey("step", true)} onUp={() => setKey("step", false)} />
-              <div className="control-cluster">
-                <ControlButton label="左斜" glyph="↙" onDown={() => setKey("left", true)} onUp={() => setKey("left", false)} />
-                <ControlButton label="右斜" glyph="↘" onDown={() => setKey("right", true)} onUp={() => setKey("right", false)} />
-              </div>
+              <ControlButton className="jump-button" label="跳" glyph="跳" onDown={() => setKey("step", true)} onUp={() => setKey("step", false)} />
             </div>
           </div>
         </div>

@@ -1011,24 +1011,33 @@ h2 {
   height: 148%;
 }
 
-.feedback-float {
+.feedback-stack {
   position: absolute;
+  top: 78px;
+  right: 12px;
+  left: 12px;
   z-index: 16;
-  max-width: 34%;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  pointer-events: none;
+}
+
+.feedback-toast {
+  max-width: min(88%, 330px);
   border: 1px solid currentColor;
   border-radius: 4px;
-  padding: 3px 6px;
-  background: rgba(5, 3, 8, 0.72);
+  padding: 4px 8px;
+  background: rgba(5, 3, 8, 0.74);
+  backdrop-filter: blur(10px);
   font-family: "Geist Mono", ui-monospace, monospace;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 900;
   line-height: 1;
-  pointer-events: none;
   text-align: center;
   text-shadow: 0 0 8px currentColor;
-  transform: translate(-50%, -50%);
   white-space: nowrap;
-  animation: feedback-pop 1.2s ease-out forwards;
+  animation: feedback-toast-pop 1.2s ease-out forwards;
 }
 
 .feedback-good {
@@ -1492,6 +1501,28 @@ h2 {
   }
 }
 
+@keyframes feedback-toast-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+
+  18% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  78% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+}
+
 @keyframes splash-pop {
   50% {
     opacity: 0.45;
@@ -1512,8 +1543,9 @@ h2 {
 
 .tutorial-cue {
   position: absolute;
+  top: 84px;
   right: 12px;
-  bottom: 5%;
+  bottom: auto;
   left: 12px;
   z-index: 13;
   display: grid;
@@ -1635,7 +1667,7 @@ h2 {
   left: 12px;
   z-index: 14;
   display: none;
-  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  grid-template-columns: 118px minmax(0, 1fr) 70px;
   align-items: end;
   gap: 8px;
   pointer-events: none;
@@ -1648,10 +1680,15 @@ h2 {
   }
 }
 
-.control-cluster {
+.control-dpad {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 7px;
+  width: 118px;
+  height: 118px;
+  grid-template-columns: repeat(3, 38px);
+  grid-template-rows: repeat(3, 38px);
+  align-items: center;
+  justify-items: center;
+  gap: 2px;
 }
 
 .control-button {
@@ -1674,12 +1711,36 @@ h2 {
   box-shadow: inset 0 1px rgba(255, 255, 255, 0.12), 0 8px 18px rgba(0, 0, 0, 0.2);
 }
 
-.touch-controls > .control-button {
-  justify-self: center;
-  width: 48px;
-  height: 48px;
-  margin-bottom: 8px;
-  font-size: 15px;
+.dpad-up {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.dpad-left {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.dpad-right {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.dpad-down {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+.jump-button {
+  grid-column: 3;
+  justify-self: end;
+  width: 62px;
+  height: 62px;
+  margin-bottom: 10px;
+  border-color: rgba(255, 209, 102, 0.42);
+  background: rgba(23, 14, 8, 0.58);
+  color: #fff7d2;
+  font-size: 17px;
 }
 
 .control-button:active {
@@ -1856,12 +1917,17 @@ h2 {
   }
 
   .tutorial-cue {
-    right: 56px;
-    bottom: 14%;
-    left: 56px;
+    top: 72px;
+    right: 10px;
+    bottom: auto;
+    left: 10px;
     padding: 3px 5px;
     background: rgba(4, 3, 7, 0.44);
     backdrop-filter: blur(8px);
+  }
+
+  .feedback-stack {
+    top: 104px;
   }
 }
 
@@ -1883,25 +1949,27 @@ h2 {
   .touch-controls {
     right: 9px;
     left: 9px;
-    grid-template-columns: 42px minmax(0, 1fr) 42px;
+    grid-template-columns: 112px minmax(0, 1fr) 64px;
   }
 
-  .control-cluster {
-    grid-template-columns: 1fr;
-    gap: 6px;
+  .control-dpad {
+    width: 112px;
+    height: 112px;
+    grid-template-columns: repeat(3, 36px);
+    grid-template-rows: repeat(3, 36px);
   }
 
   .control-button {
-    width: 39px;
-    height: 39px;
+    width: 37px;
+    height: 37px;
     font-size: 16px;
   }
 
-  .touch-controls > .control-button {
-    width: 45px;
-    height: 45px;
-    margin-bottom: 7px;
-    font-size: 14px;
+  .jump-button {
+    width: 58px;
+    height: 58px;
+    margin-bottom: 12px;
+    font-size: 15px;
   }
 
   .message-strip {
@@ -1912,8 +1980,9 @@ h2 {
   }
 
   .tutorial-cue {
-    bottom: 14%;
-    right: 58px;
-    left: 58px;
+    top: 70px;
+    right: 8px;
+    bottom: auto;
+    left: 8px;
   }
 }
