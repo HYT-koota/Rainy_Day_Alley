@@ -216,26 +216,36 @@ h2 {
 
 .rain-layer {
   position: absolute;
-  inset: -30% 0;
+  inset: -34% -14%;
   z-index: 7;
   pointer-events: none;
-  background-image: repeating-linear-gradient(
-    104deg,
-    transparent 0 16px,
-    rgba(192, 248, 255, 0.48) 17px 19px,
-    transparent 20px 40px
-  );
-  animation: rain-drop 0.55s linear infinite;
+  background-repeat: repeat;
+  mix-blend-mode: screen;
+  animation: rain-drop 0.58s linear infinite;
 }
 
 .rain-layer-back {
-  opacity: 0.24;
-  animation-duration: 0.8s;
+  opacity: 0.22;
+  background-image:
+    radial-gradient(ellipse 1.1px 13px at 14px 18px, rgba(192, 248, 255, 0.5) 0 58%, transparent 62%),
+    radial-gradient(ellipse 1px 8px at 48px 58px, rgba(157, 255, 210, 0.28) 0 56%, transparent 62%),
+    radial-gradient(ellipse 0.8px 10px at 70px 32px, rgba(246, 237, 245, 0.22) 0 54%, transparent 60%);
+  background-size: 86px 104px, 118px 142px, 72px 116px;
+  background-position: 0 0, 18px 34px, 44px 12px;
+  filter: blur(0.35px);
+  animation-duration: 0.86s;
 }
 
 .rain-layer-front {
-  opacity: 0.48;
-  filter: drop-shadow(0 0 4px rgba(48, 240, 255, 0.5));
+  opacity: 0.42;
+  background-image:
+    radial-gradient(ellipse 1.2px 16px at 18px 24px, rgba(192, 248, 255, 0.72) 0 56%, transparent 62%),
+    radial-gradient(ellipse 1px 11px at 54px 74px, rgba(48, 240, 255, 0.52) 0 54%, transparent 61%),
+    radial-gradient(ellipse 0.9px 7px at 80px 38px, rgba(246, 237, 245, 0.36) 0 52%, transparent 60%),
+    radial-gradient(ellipse 1px 10px at 32px 110px, rgba(157, 255, 210, 0.38) 0 50%, transparent 60%);
+  background-size: 92px 132px, 76px 112px, 128px 156px, 64px 96px;
+  background-position: 6px 0, 40px 18px, 12px 46px, 0 28px;
+  filter: drop-shadow(0 0 3px rgba(48, 240, 255, 0.38));
 }
 
 .road-glow {
@@ -1620,45 +1630,62 @@ h2 {
 
 .touch-controls {
   position: absolute;
-  right: 14px;
-  bottom: 14px;
-  left: 14px;
+  right: 12px;
+  bottom: max(10px, env(safe-area-inset-bottom));
+  left: 12px;
   z-index: 14;
   display: none;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
   align-items: end;
-  gap: 10px;
+  gap: 8px;
+  pointer-events: none;
 }
 
 @media (hover: none) and (pointer: coarse) {
   .touch-controls {
     display: grid;
-    opacity: 0.62;
+    opacity: 0.74;
   }
 }
 
 .control-cluster {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  grid-template-columns: 1fr;
+  gap: 7px;
 }
 
 .control-button {
-  min-height: 46px;
-  border: 1px solid rgba(246, 237, 245, 0.18);
-  border-radius: 8px;
-  padding: 0 10px;
-  background: rgba(12, 8, 16, 0.76);
+  width: 42px;
+  height: 42px;
+  min-height: 0;
+  border: 1px solid rgba(246, 237, 245, 0.2);
+  border-radius: 999px;
+  padding: 0;
+  background: rgba(12, 8, 16, 0.54);
   color: #fff;
   cursor: pointer;
+  font-size: 18px;
   font-weight: 900;
-  box-shadow: inset 0 1px rgba(255, 255, 255, 0.1), 0 10px 22px rgba(0, 0, 0, 0.25);
+  line-height: 1;
+  pointer-events: auto;
+  touch-action: none;
   user-select: none;
+  backdrop-filter: blur(12px);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.12), 0 8px 18px rgba(0, 0, 0, 0.2);
+}
+
+.touch-controls > .control-button {
+  justify-self: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 8px;
+  font-size: 15px;
 }
 
 .control-button:active {
   border-color: rgba(48, 240, 255, 0.8);
-  background: rgba(48, 240, 255, 0.2);
+  background: rgba(48, 240, 255, 0.24);
+  opacity: 0.96;
 }
 
 .desktop-panel {
@@ -1722,11 +1749,11 @@ h2 {
 
 @keyframes rain-drop {
   from {
-    transform: translate3d(0, -6%, 0);
+    transform: translate3d(0, -7%, 0) skewX(-13deg);
   }
 
   to {
-    transform: translate3d(-4%, 14%, 0);
+    transform: translate3d(-5%, 16%, 0) skewX(-13deg);
   }
 }
 
@@ -1754,12 +1781,26 @@ h2 {
   }
 
   .stage-topbar {
-    height: 72px;
+    height: 58px;
+    min-height: 58px;
     border-radius: 0;
+    padding: 8px 10px;
+  }
+
+  .eyebrow {
+    margin-bottom: 2px;
+    font-size: 9px;
+  }
+
+  .primary-action,
+  .state-overlay button {
+    min-height: 32px;
+    padding: 0 12px;
+    font-size: 13px;
   }
 
   .phone-frame {
-    height: calc(100svh - 72px);
+    height: calc(100svh - 58px);
     border-radius: 0;
   }
 
@@ -1772,30 +1813,95 @@ h2 {
   .desktop-panel {
     display: none;
   }
+
+  .hud-panel {
+    top: 8px;
+    right: 8px;
+    left: 8px;
+    grid-template-columns: 1fr 1fr auto;
+    align-items: end;
+    gap: 4px 6px;
+    border-color: rgba(246, 237, 245, 0.1);
+    padding: 6px 7px;
+    background: rgba(4, 3, 7, 0.38);
+    backdrop-filter: blur(10px);
+  }
+
+  .stat-row {
+    gap: 3px;
+  }
+
+  .stat-label,
+  .mini-metrics {
+    gap: 4px;
+    font-size: 9px;
+  }
+
+  .mini-metrics {
+    grid-row: 1 / span 2;
+    grid-column: 3;
+    align-self: center;
+    flex-direction: column;
+    align-items: flex-end;
+    line-height: 1.1;
+  }
+
+  .stat-track,
+  .progress-track {
+    height: 3px;
+  }
+
+  .progress-track {
+    grid-column: 1 / -1;
+  }
+
+  .tutorial-cue {
+    right: 56px;
+    bottom: 14%;
+    left: 56px;
+    padding: 3px 5px;
+    background: rgba(4, 3, 7, 0.44);
+    backdrop-filter: blur(8px);
+  }
 }
 
 @media (max-width: 430px) {
   .stage-topbar {
-    padding: 11px 12px;
+    padding: 8px 10px;
   }
 
   h1 {
-    font-size: 26px;
+    font-size: 22px;
   }
 
   .hud-panel {
-    right: 10px;
-    left: 10px;
+    top: 6px;
+    right: 6px;
+    left: 6px;
   }
 
   .touch-controls {
-    right: 10px;
-    left: 10px;
-    grid-template-columns: 1fr;
+    right: 9px;
+    left: 9px;
+    grid-template-columns: 42px minmax(0, 1fr) 42px;
   }
 
   .control-cluster {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .control-button {
+    width: 39px;
+    height: 39px;
+    font-size: 16px;
+  }
+
+  .touch-controls > .control-button {
+    width: 45px;
+    height: 45px;
+    margin-bottom: 7px;
+    font-size: 14px;
   }
 
   .message-strip {
@@ -1806,8 +1912,8 @@ h2 {
   }
 
   .tutorial-cue {
-    bottom: 5%;
-    right: 8px;
-    left: 8px;
+    bottom: 14%;
+    right: 58px;
+    left: 58px;
   }
 }

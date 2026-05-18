@@ -694,10 +694,12 @@ function StatBar({ label, value, tone }: { label: string; value: number; tone: "
 
 function ControlButton({
   label,
+  glyph = label,
   onDown,
   onUp,
 }: {
   label: string;
+  glyph?: string;
   onDown: () => void;
   onUp: () => void;
 }) {
@@ -705,6 +707,8 @@ function ControlButton({
     <button
       className="control-button"
       type="button"
+      aria-label={label}
+      title={label}
       onPointerDown={(event) => {
         event.currentTarget.setPointerCapture(event.pointerId);
         onDown();
@@ -713,7 +717,7 @@ function ControlButton({
       onPointerCancel={onUp}
       onPointerLeave={onUp}
     >
-      {label}
+      {glyph}
     </button>
   );
 }
@@ -1239,13 +1243,13 @@ export default function Home() {
 
             <div className="touch-controls" aria-label="移动端操控">
               <div className="control-cluster">
-                <ControlButton label="升伞" onDown={() => setKey("up", true)} onUp={() => setKey("up", false)} />
-                <ControlButton label="降伞" onDown={() => setKey("down", true)} onUp={() => setKey("down", false)} />
+                <ControlButton label="升伞" glyph="↑" onDown={() => setKey("up", true)} onUp={() => setKey("up", false)} />
+                <ControlButton label="降伞" glyph="↓" onDown={() => setKey("down", true)} onUp={() => setKey("down", false)} />
               </div>
-              <ControlButton label="跳" onDown={() => setKey("step", true)} onUp={() => setKey("step", false)} />
+              <ControlButton label="跳" glyph="跳" onDown={() => setKey("step", true)} onUp={() => setKey("step", false)} />
               <div className="control-cluster">
-                <ControlButton label="左斜" onDown={() => setKey("left", true)} onUp={() => setKey("left", false)} />
-                <ControlButton label="右斜" onDown={() => setKey("right", true)} onUp={() => setKey("right", false)} />
+                <ControlButton label="左斜" glyph="↙" onDown={() => setKey("left", true)} onUp={() => setKey("left", false)} />
+                <ControlButton label="右斜" glyph="↘" onDown={() => setKey("right", true)} onUp={() => setKey("right", false)} />
               </div>
             </div>
           </div>
