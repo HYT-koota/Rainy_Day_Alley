@@ -76,16 +76,16 @@ type GameSnapshot = {
   message: string;
 };
 
-const PLAYER_BODY: Rect = { x: 43, y: 56, w: 10, h: 28 };
-const PLAYER_FEET: Rect = { x: 45, y: 82, w: 10, h: 6 };
+const PLAYER_BODY: Rect = { x: 43, y: 58, w: 10, h: 28 };
+const PLAYER_FEET: Rect = { x: 45, y: 84, w: 10, h: 6 };
 const LEARNING_COURSE_LENGTH = 84;
-const CHALLENGE_LEVEL_DURATION = 13;
-const GROUND_BASELINE = 88;
+const CHALLENGE_LEVEL_DURATION = 11;
+const GROUND_BASELINE = 90;
 const JUMP_DURATION = 0.9;
 const CUE_GAP_MIN = -2;
 const CUE_GAP_MAX = 4;
-const VEHICLE_DODGE_GRACE = 6;
-const VEHICLE_HIT_GRACE = 2.5;
+const VEHICLE_DODGE_GRACE = 10;
+const VEHICLE_HIT_GRACE = 4.5;
 const UMBRELLA_REST_HEIGHT = 56;
 const UMBRELLA_RAISED_HEIGHT = 66;
 const UMBRELLA_LOWERED_HEIGHT = 46;
@@ -187,7 +187,7 @@ const intersects = (a: Rect, b: Rect) =>
 function umbrellaRect(player: PlayerState): Rect {
   return {
     x: PLAYER_BODY.x - 6 + player.umbrellaTilt * 0.035,
-    y: 53 - (player.umbrellaHeight - 56) * 0.06,
+    y: 55 - (player.umbrellaHeight - 56) * 0.06,
     w: 31,
     h: 13,
   };
@@ -237,11 +237,11 @@ function getSpawnDelay(mode: GameMode, type: ObstacleType, distance: number, lev
     return 0.75;
   }
 
-  const baseDelay = distance < 28 ? 2.55 : distance < 62 ? 2.25 : 1.95;
-  const levelPressure = Math.min(0.9, (level - 1) * 0.16);
-  const tunedDelay = Math.max(0.85, baseDelay - levelPressure);
+  const baseDelay = distance < 28 ? 3 : distance < 62 ? 2.65 : 2.25;
+  const levelPressure = Math.min(0.85, Math.max(0, level - 3) * 0.14);
+  const tunedDelay = Math.max(1.12, baseDelay - levelPressure);
   if (type === "car" || type === "scooter") {
-    return tunedDelay + 0.35;
+    return tunedDelay + 0.55;
   }
   if (isGroundHazard(type)) {
     return tunedDelay;
@@ -360,6 +360,20 @@ function collisionEffect(type: ObstacleType) {
   }
 }
 
+function applyChallengeGrace(effect: ReturnType<typeof collisionEffect>, mode: GameMode, level: number) {
+  if (mode !== "challenge") {
+    return effect;
+  }
+
+  const scale = level <= 2 ? 0.55 : level <= 4 ? 0.72 : 1;
+  return {
+    ...effect,
+    mood: Math.max(1, Math.ceil(effect.mood * scale)),
+    wet: Math.max(0, Math.ceil(effect.wet * scale)),
+    slow: effect.slow * (level <= 4 ? 0.75 : 1),
+  };
+}
+
 function obstacleRect(obstacle: ObstacleSpec): Rect {
   return { x: obstacle.x, y: obstacle.y, w: obstacle.w, h: obstacle.h };
 }
@@ -383,10 +397,10 @@ function isVehicle(type: ObstacleType) {
 
 function isVehicleDodgeSatisfied(obstacle: ObstacleSpec, player: PlayerState) {
   if (obstacle.type === "scooter") {
-    return Math.abs(player.umbrellaTilt) >= 18;
+    return Math.abs(player.umbrellaTilt) >= 12;
   }
   if (obstacle.type === "car") {
-    return Math.abs(player.umbrellaTilt) >= 24;
+    return Math.abs(player.umbrellaTilt) >= 14;
   }
   return false;
 }
@@ -725,12 +739,14 @@ function ControlButton({
       aria-label={label}
       title={label}
       onPointerDown={(event) => {
+        event.preventDefault();
         event.currentTarget.setPointerCapture(event.pointerId);
         onDown();
       }}
       onPointerUp={onUp}
       onPointerCancel={onUp}
       onPointerLeave={onUp}
+      onContextMenu={(event) => event.preventDefault()}
     >
       {glyph}
     </button>
@@ -853,8 +869,8 @@ export default function Home() {
             ? UMBRELLA_LOWERED_HEIGHT
             : UMBRELLA_REST_HEIGHT;
         player.umbrellaHeight = approach(player.umbrellaHeight, umbrellaHeightTarget, UMBRELLA_HEIGHT_SPEED * dt);
-        if (keys.left) player.umbrellaTilt -= 82 * dt;
-        if (keys.right) player.umbrellaTilt += 82 * dt;
+        if (keys.left) player.umbrellaTilt -= 128 * dt;
+        if (keys.right) player.umbrellaTilt += 128 * dt;
         if (!keys.left && !keys.right) player.umbrellaTilt *= 1 - 5 * dt;
         if (keys.step && !stepPressedRef.current && player.jumpTimer <= 0) {
           player.jumpTimer = JUMP_DURATION;
@@ -872,7 +888,7 @@ export default function Home() {
         }
         player.boostTimer = Math.max(0, player.boostTimer - dt);
         player.slowTimer = Math.max(0, player.slowTimer - dt);
-        const challengeSpeed = current.mode === "challenge" ? (level - 1) * 0.1 : 0;
+        const challengeSpeed = current.mode === "challenge" ? (level - 1) * 0.06 : 0;
         player.speed = clamp(1 + challengeSpeed + (player.boostTimer > 0 ? 0.55 : 0) - (player.slowTimer > 0 ? 0.32 : 0), 0.68, 2.25);
 
         const gate = current.mode === "learning" ? getTutorialObstacle(current.obstacles) : undefined;
@@ -943,11 +959,14 @@ export default function Home() {
             }
           }
 
+          const earlyEase = current.mode === "challenge" ? clamp((level - 1) / 5, 0, 1) : 1;
+          const passiveWetScale = current.mode === "challenge" ? 0.58 + earlyEase * 0.42 : 1;
+          const passiveMoodScale = current.mode === "challenge" ? 0.65 + earlyEase * 0.35 : 1;
           const wetRate = player.umbrellaHeight > 62 ? 1.2 : player.umbrellaHeight < 50 ? 0.35 : 0.55;
-          const wetDelta = dt * wetRate;
+          const wetDelta = dt * wetRate * passiveWetScale;
           player.wetness = clamp(player.wetness + wetDelta, 0, 100);
 
-          const moodDelta = dt * (player.wetness > 75 ? 1.2 : 0.35);
+          const moodDelta = dt * (player.wetness > 75 ? 1.2 : 0.35) * passiveMoodScale;
           player.mood = clamp(player.mood - moodDelta, 0, 100);
 
           passiveWetRef.current += wetDelta;
@@ -1041,7 +1060,7 @@ export default function Home() {
             if (!obstacle.hit && !obstacle.outcome && !blocksLearningDamage && shouldCollide(obstacle, player)) {
               obstacle.hit = true;
               obstacle.outcome = "hit";
-              const effect = collisionEffect(obstacle.type);
+              const effect = applyChallengeGrace(collisionEffect(obstacle.type), current.mode, level);
               player.mood = clamp(player.mood - effect.mood, 0, 100);
               player.wetness = clamp(player.wetness + effect.wet, 0, 100);
               player.slowTimer = Math.max(player.slowTimer, effect.slow);
@@ -1131,7 +1150,7 @@ export default function Home() {
         </div>
 
         <div className="phone-frame">
-          <div className={`game-scene scene-${tutorialCue.tone}`}>
+          <div className={`game-scene scene-${tutorialCue.tone}`} onContextMenu={(event) => event.preventDefault()}>
             <div className="scene-depth" />
             <div className="neon-sign sign-one">雨天</div>
             <div className="neon-sign sign-two">走巷</div>
